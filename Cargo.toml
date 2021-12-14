@@ -1,0 +1,10 @@
+[package]
+name = "ezp-log-to-csv"
+version = "0.1.0"
+authors = ["Chrysanthemum Lovelace <chrysanthemum@pitt.edu>"]
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.51"
+csv = "1.1.6"
+structopt = "0.3.25"
