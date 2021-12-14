@@ -16,9 +16,7 @@ struct Options {
 
 fn main() -> Result<()> {
     let options = Options::from_args();
-    let mut input = BufReader::new(
-        File::open(&options.file).context(format!("failed to open {:?}", options.file))?,
-    );
+    let mut input = BufReader::new(File::open(&options.file).context(format!("failed to open {:?}", options.file))?);
     let mut writer = csv::Writer::from_writer(stdout());
     if options.headers {
         writer
@@ -37,17 +35,9 @@ fn main() -> Result<()> {
             .context("failed to write csv headers")?;
     }
     let mut buf = String::new();
-    while input
-        .read_line(&mut buf)
-        .context("failed to read a line from the input file")?
-        != 0
-    {
+    while input.read_line(&mut buf).context("failed to read a line from the input file")? != 0 {
         writer
-            .write_record(
-                buf.trim()
-                    .split(' ')
-                    .map(|field| field.trim_matches(&['"', '[', ']'][..])),
-            )
+            .write_record(buf.trim().split(' ').map(|field| field.trim_matches(&['"', '[', ']'][..])))
             .context("failed to write a csv record")?;
         buf.clear();
     }
