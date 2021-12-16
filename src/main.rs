@@ -20,7 +20,7 @@ fn main() -> Result<()> {
     let mut writer = csv::Writer::from_writer(stdout());
     if options.headers {
         writer
-            .write_record(&[
+            .write_record([
                 "IP Address",
                 "Username",
                 "Session ID",
