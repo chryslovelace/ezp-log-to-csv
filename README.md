@@ -2,6 +2,19 @@
 
 This console application takes a path to an EZProxy log file as an argument and writes a CSV representation of it to stdout.
 
+    ezp-log-to-csv 0.1.0
+
+    USAGE:
+        ezp-log-to-csv.exe [FLAGS] <file>
+
+    FLAGS:
+            --help               Prints help information
+        -h, --include-headers    Include CSV headers
+        -V, --version            Prints version information
+
+    ARGS:
+        <file>    
+
 ## License
 
 Copyright University of Pittsburgh.
