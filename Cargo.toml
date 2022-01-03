@@ -1,6 +1,6 @@
 [package]
 name = "ezp-log-to-csv"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Chrysanthemum Lovelace <chrysanthemum@pitt.edu>"]
 edition = "2021"
 
@@ -8,3 +8,6 @@ edition = "2021"
 anyhow = "1.0.51"
 csv = "1.1.6"
 structopt = "0.3.25"
+
+[features]
+backtrace = ["anyhow/backtrace"]
