@@ -16,7 +16,7 @@ struct Options {
 
 fn main() -> Result<()> {
     let options = Options::from_args();
-    let file = File::open(&options.file).with_context(|| format!("failed to open {:?}", options.file))?;
+    let file = File::open(&options.file).with_context(|| format!("failed to open {}", options.file.display()))?;
     let mut reader = BufReader::new(file);
     let mut writer = csv::Writer::from_writer(stdout());
     if options.headers {
