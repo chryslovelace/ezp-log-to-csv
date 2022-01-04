@@ -62,10 +62,11 @@ impl Input {
     /// Constructs an Input that reads from a file.
     fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path = path.as_ref();
-        let file = File::open(path).with_context(|| format!("failed to open {}", path.display()))?;
+        let name = path.display().to_string();
+        let file = File::open(path).with_context(|| format!("failed to open {}", name))?;
         Ok(Self {
             reader: InputReader::File(BufReader::new(file)),
-            name: path.to_string_lossy().into_owned().into(),
+            name: name.into(),
             line: 0,
         })
     }
