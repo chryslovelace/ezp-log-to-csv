@@ -7,6 +7,39 @@ use std::{
 };
 use structopt::StructOpt;
 
+fn main() -> Result<()> {
+    let options = Options::from_args();
+    let mut input = match options.file {
+        Some(path) => Input::from_file(path)?,
+        None => Input::from_stdin(),
+    };
+    let mut writer = csv::Writer::from_writer(stdout());
+    if options.headers {
+        writer
+            .write_record([
+                "IP Address",
+                "Username",
+                "Session ID",
+                "Timestamp",
+                "Timezone",
+                "HTTP Method",
+                "Request URL",
+                "HTTP Version",
+                "HTTP Status Code",
+                "Bytes Transferred",
+            ])
+            .context("failed to write csv headers")?;
+    }
+    let mut buf = String::new();
+    while input.read_line(&mut buf)? {
+        writer
+            .write_record(buf.trim().split(' ').map(|field| field.trim_matches(&['"', '[', ']'][..])))
+            .with_context(|| format!("failed to write a csv record for line {} of {}", input.line, input.name))?;
+        buf.clear();
+    }
+    Ok(())
+}
+
 #[derive(StructOpt)]
 struct Options {
     #[structopt(parse(from_os_str))]
@@ -87,37 +120,4 @@ impl BufRead for InputReader {
             InputReader::File(file) => file.consume(amt),
         }
     }
-}
-
-fn main() -> Result<()> {
-    let options = Options::from_args();
-    let mut input = match options.file {
-        Some(path) => Input::from_file(path)?,
-        None => Input::from_stdin(),
-    };
-    let mut writer = csv::Writer::from_writer(stdout());
-    if options.headers {
-        writer
-            .write_record([
-                "IP Address",
-                "Username",
-                "Session ID",
-                "Timestamp",
-                "Timezone",
-                "HTTP Method",
-                "Request URL",
-                "HTTP Version",
-                "HTTP Status Code",
-                "Bytes Transferred",
-            ])
-            .context("failed to write csv headers")?;
-    }
-    let mut buf = String::new();
-    while input.read_line(&mut buf)? {
-        writer
-            .write_record(buf.trim().split(' ').map(|field| field.trim_matches(&['"', '[', ']'][..])))
-            .with_context(|| format!("failed to write a csv record for line {} of {}", input.line, input.name))?;
-        buf.clear();
-    }
-    Ok(())
 }
