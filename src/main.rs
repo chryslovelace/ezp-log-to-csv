@@ -15,29 +15,50 @@ struct Options {
     headers: bool,
 }
 
+/// Struct representing an input source, which can be a file or stdin.
 struct Input {
+    /// Holds the handle to the input.
     reader: InputReader,
+    /// The file name, or the string "<stdin>".
     name: Cow<'static, str>,
+    /// Tracks how many lines have been read.
+    line: u64,
 }
 
 impl Input {
+    /// Constructs an Input that reads from a file.
     fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path = path.as_ref();
         let file = File::open(path).with_context(|| format!("failed to open {}", path.display()))?;
         Ok(Self {
             reader: InputReader::File(BufReader::new(file)),
             name: path.to_string_lossy().into_owned().into(),
+            line: 0,
         })
     }
 
+    /// Constructs an Input that reads from stdin.
     fn from_stdin() -> Self {
         Self {
             reader: InputReader::Stdin(BufReader::new(stdin())),
             name: "<stdin>".into(),
+            line: 0,
         }
+    }
+
+    /// Read a line from the input and appends it to the provided buffer, including the terminating newline character.
+    /// Returns true if there are lines remaining, false for EOF.
+    fn read_line(&mut self, buf: &mut String) -> Result<bool> {
+        let bytes_read = self
+            .reader
+            .read_line(buf)
+            .with_context(|| format!("failed to read a line from the input after {} lines", self.line))?;
+        self.line += 1;
+        Ok(bytes_read != 0)
     }
 }
 
+/// Wraps the underlying source in a BufReader and dispatches to its Read and BufRead implementations.
 enum InputReader {
     Stdin(BufReader<Stdin>),
     File(BufReader<File>),
@@ -92,17 +113,10 @@ fn main() -> Result<()> {
             .context("failed to write csv headers")?;
     }
     let mut buf = String::new();
-    let mut line = 0u64;
-    while input
-        .reader
-        .read_line(&mut buf)
-        .with_context(|| format!("failed to read a line from the input after {} lines", line))?
-        != 0
-    {
-        line += 1;
+    while input.read_line(&mut buf)? {
         writer
             .write_record(buf.trim().split(' ').map(|field| field.trim_matches(&['"', '[', ']'][..])))
-            .with_context(|| format!("failed to write a csv record for line {} of {}", line, input.name))?;
+            .with_context(|| format!("failed to write a csv record for line {} of {}", input.line, input.name))?;
         buf.clear();
     }
     Ok(())
