@@ -51,7 +51,7 @@ struct Options {
 /// Struct representing an input source, which can be a file or stdin.
 struct Input {
     /// Holds the handle to the input.
-    reader: InputReader,
+    reader: BufReader<InputReader>,
     /// The file name, or the string "<stdin>".
     name: Cow<'static, str>,
     /// Tracks how many lines have been read.
@@ -65,7 +65,7 @@ impl Input {
         let name = path.display().to_string();
         let file = File::open(path).with_context(|| format!("failed to open {}", name))?;
         Ok(Self {
-            reader: InputReader::File(BufReader::new(file)),
+            reader: BufReader::new(InputReader::File(file)),
             name: name.into(),
             line: 0,
         })
@@ -74,7 +74,7 @@ impl Input {
     /// Constructs an Input that reads from stdin.
     fn from_stdin() -> Self {
         Self {
-            reader: InputReader::Stdin(BufReader::new(stdin())),
+            reader: BufReader::new(InputReader::Stdin(stdin())),
             name: "<stdin>".into(),
             line: 0,
         }
@@ -92,10 +92,10 @@ impl Input {
     }
 }
 
-/// Wraps the underlying source in a BufReader and dispatches to its Read and BufRead implementations.
+/// Wraps the underlying source and dispatches to its Read implementation.
 enum InputReader {
-    Stdin(BufReader<Stdin>),
-    File(BufReader<File>),
+    Stdin(Stdin),
+    File(File),
 }
 
 impl Read for InputReader {
@@ -103,22 +103,6 @@ impl Read for InputReader {
         match self {
             InputReader::Stdin(stdin) => stdin.read(buf),
             InputReader::File(file) => file.read(buf),
-        }
-    }
-}
-
-impl BufRead for InputReader {
-    fn fill_buf(&mut self) -> std::io::Result<&[u8]> {
-        match self {
-            InputReader::Stdin(stdin) => stdin.fill_buf(),
-            InputReader::File(file) => file.fill_buf(),
-        }
-    }
-
-    fn consume(&mut self, amt: usize) {
-        match self {
-            InputReader::Stdin(stdin) => stdin.consume(amt),
-            InputReader::File(file) => file.consume(amt),
         }
     }
 }
